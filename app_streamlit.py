@@ -7,7 +7,7 @@ st.set_page_config(
 	page_icon = "☕"
 )
 
-model = joblib.load("model_klasifikasi_kopi.joblib")
+model = joblib.load("model_klasifikasi_kualitas.joblib")
 
 st.title("Klasifikasi Kualitas Kopi")
 st.markdown("Klasifikasi kualitas kopi berdasarkan fitur Kadar Kafein, Tingkat Keasaman dan Jenis Proses")
