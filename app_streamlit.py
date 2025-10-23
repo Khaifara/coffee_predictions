@@ -118,17 +118,14 @@ if st.button("✨ Prediksi Kualitas Kopi"):
     st.caption(f"Model confidence: {max(proba)*100:.2f}%")
 
     # Visualisasi probabilitas
-    px.colors.sequential.Coffee = ['#3E2723', '#6D4C41', '#A1887F', '#D7CCC8', '#EFEBE9']
-
-fig = px.bar(
-    x=model.classes_,
-    y=proba,
-    labels={'x': 'Kualitas', 'y': 'Probabilitas'},
-    title="Distribusi Probabilitas Prediksi",
-    color=model.classes_,
-    color_discrete_sequence=px.colors.sequential.Coffee
+    fig = px.bar(
+        x=model.classes_,
+        y=proba,
+        labels={'x': 'Kualitas', 'y': 'Probabilitas'},
+        title="Distribusi Probabilitas Prediksi",
+        color=model.classes_,
+        color_discrete_sequence=px.colors.sequential.Coffee
     )
-
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
