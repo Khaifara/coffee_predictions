@@ -120,13 +120,19 @@ if st.button("✨ Prediksi Kualitas Kopi"):
     # 🎯 Warna kopi custom
     px.colors.sequential.Coffee = ['#3E2723', '#6D4C41', '#A1887F', '#D7CCC8', '#EFEBE9']
 
+    # 🪄 Gunakan DataFrame agar aman di semua versi Plotly
+    proba_df = pd.DataFrame({
+        "Kualitas": model.classes_,
+        "Probabilitas": proba
+    })
+
     # 📊 Visualisasi probabilitas
     fig = px.bar(
-        x=model.classes_,
-        y=proba,
-        labels={'x': 'Kualitas', 'y': 'Probabilitas'},
+        proba_df,
+        x="Kualitas",
+        y="Probabilitas",
         title="Distribusi Probabilitas Prediksi",
-        color=model.classes_,
+        color="Kualitas",
         color_discrete_sequence=px.colors.sequential.Coffee
     )
     fig.update_layout(
