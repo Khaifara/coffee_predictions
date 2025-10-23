@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 🎨 CSS custom: efek kaca & tema premium
+# 🎨 CSS Custom: efek kaca, font premium, dan warna kopi
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@600&display=swap');
@@ -76,7 +76,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🧭 Navbar Style Header
+# 🧭 Header / Navbar
 st.markdown("""
     <div style="text-align:center;">
         <img src="https://cdn-icons-png.flaticon.com/512/924/924514.png" width="90">
@@ -89,7 +89,7 @@ st.markdown("""
 try:
     model = joblib.load("model_klasifikasi_kualitas_kopi.joblib")
 except:
-    st.warning("⚠️ Model belum tersedia. Pastikan file `model_klasifikasi_kualitas_kopi.joblib` ada di folder project.")
+    st.warning("⚠️ Model belum tersedia. Pastikan file 'model_klasifikasi_kualitas_kopi.joblib' ada di folder project.")
     st.stop()
 
 # 🎛️ Input Section (Glass Card)
@@ -117,7 +117,10 @@ if st.button("✨ Prediksi Kualitas Kopi"):
     st.markdown(f"<h3>☕ Hasil Prediksi: <span style='color:#FFD54F;'>{prediksi}</span></h3>", unsafe_allow_html=True)
     st.caption(f"Model confidence: {max(proba)*100:.2f}%")
 
-    # Visualisasi probabilitas
+    # 🎯 Warna kopi custom
+    px.colors.sequential.Coffee = ['#3E2723', '#6D4C41', '#A1887F', '#D7CCC8', '#EFEBE9']
+
+    # 📊 Visualisasi probabilitas
     fig = px.bar(
         x=model.classes_,
         y=proba,
@@ -129,12 +132,14 @@ if st.button("✨ Prediksi Kualitas Kopi"):
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font_color='#fff'
+        font_color='#fff',
+        title_font_color='#FFD54F'
     )
     st.plotly_chart(fig, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.success("Prediksi berhasil! Selamat menikmati kopi terbaikmu ☕✨")
+    st.balloons()
 
 # 📅 Footer
 st.markdown(
