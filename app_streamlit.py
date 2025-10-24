@@ -6,20 +6,22 @@ from datetime import datetime
 import requests
 import os
 import pytz
+import urllib.parse
 
 # 🌟 Konfigurasi Halaman
 st.set_page_config(
-    page_title="☕ Coffee Quality Classifier Ultimate",
+    page_title="☕ Coffee Quality Classifier Ultimate 2025",
     page_icon="☕",
     layout="wide"
 )
 
 # 🌗 AUTO LIGHT/DARK MODE berdasarkan waktu lokal
 hour = datetime.now(pytz.timezone("Asia/Jakarta")).hour
-is_dark = hour >= 18 or hour < 6  # 6 sore–6 pagi = dark mode
+is_dark = hour >= 18 or hour < 6  # malam → dark mode
 
 background_color = "#1B0E07" if is_dark else "#FFF8E1"
 text_color = "#F5F5F5" if is_dark else "#3E2723"
+accent_color = "#FFD54F" if is_dark else "#6D4C41"
 
 # 🎨 CSS Dinamis sesuai mode
 st.markdown(f"""
@@ -46,7 +48,7 @@ st.markdown(f"""
             font-family: 'Playfair Display', serif;
             font-size: 45px;
             font-weight: 700;
-            color: {'#FFD54F' if is_dark else '#6D4C41'};
+            color: {accent_color};
             text-shadow: 2px 2px 15px rgba(255, 213, 79, 0.3);
         }}
 
@@ -110,28 +112,37 @@ with st.container():
         jenis_proses = st.selectbox("⚙️ Jenis Proses", ["Natural", "Honey", "Washed"])
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 🌦️ Integrasi API Cuaca untuk Saran Roasting
+# 🌦️ Integrasi Cuaca dengan Open-Meteo
 st.markdown('<div class="main-card">', unsafe_allow_html=True)
 st.subheader("🌦️ Cuaca & Saran Roasting Kopi")
-api_key = "https://api.open-meteo.com/v1/forecast"
 city = st.text_input("🌍 Masukkan kota kamu:", "Jakarta")
 
 if st.button("☁️ Ambil Data Cuaca"):
     try:
-        response = requests.get(f"https://wttr.in/{city}?format=%t")
-        suhu_str = response.text.replace("+", "").replace("°C", "").strip()
-        suhu = float(suhu_str)
+        city_encoded = urllib.parse.quote(city)
+        url_geo = f"https://geocoding-api.open-meteo.com/v1/search?name={city_encoded}&count=1"
+        geo = requests.get(url_geo, timeout=10).json()
 
-        if suhu < 20:
-            saran = "Cuaca dingin — cocok untuk **Dark Roast** biar hangat 🔥"
-        elif suhu < 28:
-            saran = "Cuaca sedang — pilih **Medium Roast** ☕"
+        if "results" in geo:
+            lat = geo["results"][0]["latitude"]
+            lon = geo["results"][0]["longitude"]
+
+            url_weather = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
+            cuaca = requests.get(url_weather, timeout=10).json()
+            suhu = cuaca["current_weather"]["temperature"]
+
+            if suhu < 20:
+                saran = "Cuaca dingin — cocok untuk **Dark Roast** biar hangat 🔥"
+            elif suhu < 28:
+                saran = "Cuaca sedang — pilih **Medium Roast** ☕"
+            else:
+                saran = "Cuaca panas — **Light Roast** lebih pas 🌞"
+
+            st.success(f"Suhu di {city}: {suhu}°C\n\n{saran}")
         else:
-            saran = "Cuaca panas — **Light Roast** lebih pas 🌞"
-
-        st.success(f"Suhu di {city}: {suhu}°C\n\n{saran}")
-    except Exception:
-        st.error("Gagal mengambil data cuaca 😢 Pastikan koneksi aktif.")
+            st.error("❌ Kota tidak ditemukan, coba periksa ejaan.")
+    except Exception as e:
+        st.error(f"Gagal mengambil data cuaca 😢 ({e})")
 st.markdown('</div>', unsafe_allow_html=True)
 
 # 🔮 Prediksi Kualitas Kopi
@@ -143,19 +154,17 @@ if st.button("✨ Prediksi Kualitas Kopi"):
     proba = model.predict_proba(df)[0]
 
     st.markdown('<div class="main-card">', unsafe_allow_html=True)
-    st.markdown(f"<h3>☕ Hasil Prediksi: <span style='color:#FFD54F;'>{prediksi}</span></h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3>☕ Hasil Prediksi: <span style='color:{accent_color};'>{prediksi}</span></h3>", unsafe_allow_html=True)
     st.caption(f"Model confidence: {max(proba)*100:.2f}%")
 
-    # 🎯 Warna kopi custom
+    # 🎨 Warna kopi custom
     px.colors.sequential.Coffee = ['#3E2723', '#6D4C41', '#A1887F', '#D7CCC8', '#EFEBE9']
 
-    # 🪄 DataFrame untuk probabilitas
     proba_df = pd.DataFrame({
         "Kualitas": model.classes_,
         "Probabilitas": proba
     })
 
-    # 📊 Visualisasi probabilitas
     fig = px.bar(
         proba_df,
         x="Kualitas",
@@ -168,7 +177,7 @@ if st.button("✨ Prediksi Kualitas Kopi"):
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
         font_color=text_color,
-        title_font_color='#FFD54F'
+        title_font_color=accent_color
     )
     st.plotly_chart(fig, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -183,11 +192,13 @@ if st.button("✨ Prediksi Kualitas Kopi"):
         "Prediksi": [prediksi],
         "Kepercayaan (%)": [max(proba)*100]
     })
+
     if os.path.exists(history_file):
         old = pd.read_csv(history_file)
         pd.concat([old, new_entry], ignore_index=True).to_csv(history_file, index=False)
     else:
         new_entry.to_csv(history_file, index=False)
+
     st.success("Riwayat prediksi disimpan ke 'riwayat_prediksi_kopi.csv' 📁")
     st.balloons()
 
