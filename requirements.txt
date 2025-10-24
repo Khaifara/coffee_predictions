@@ -7,4 +7,5 @@ seaborn
 requests
 scikit_learn
 plotly
-
+ptyz
+urllib3
